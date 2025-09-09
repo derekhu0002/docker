@@ -1,0 +1,62 @@
+{
+  "id": "filigran-catalog-id",
+  "name": "OpenCTI Connectors contracts",
+  "description": "",
+  "version": "rolling",
+  "contracts": [
+    {
+      "title": "Test Connector",
+      "slug": "test-connector",
+      "description": "A minimal test connector for development purposes. This connector demonstrates the basic structure required for a custom catalog entry.",
+      "short_description": "Minimal test connector for live catalog development",
+      "logo": "https://res.cloudinary.com/dktzowanc/image/upload/v1752140062/Screenshot_2025-07-10_113340_hwa5wh.png",
+      "use_cases": [],
+      "verified": false,
+      "last_verified_date": "",
+      "playbook_supported": false,
+      "max_confidence_level": 50,
+      "support_version": ">= 6.5.1",
+      "subscription_link": "",
+      "source_code": "https://github.com/example/test-connector",
+      "manager_supported": true,
+      "container_version": "1.0.0",
+      "container_image": "test/connector-test",
+      "container_type": "EXTERNAL_IMPORT",
+      "config_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://example.com/test-connector.schema.json",
+        "type": "object",
+        "properties": {
+          "TEST_API_KEY": {
+            "description": "Test API key for the connector",
+            "type": "string",
+            "format": "password",
+            "writeOnly": true
+          },
+          "TEST_URL": {
+            "description": "Test URL endpoint",
+            "type": "string",
+            "format": "uri",
+            "default": "https://api.example.com"
+          },
+          "TEST_INTERVAL": {
+            "description": "Polling interval in hours",
+            "type": "integer",
+            "default": 24,
+            "minimum": 1,
+            "maximum": 168
+          },
+          "TEST_ENABLED": {
+            "description": "Enable or disable the test connector",
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "TEST_API_KEY"
+        ],
+        "additionalProperties": true
+      }
+    }
+  ]
+}

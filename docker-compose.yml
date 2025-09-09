@@ -112,6 +112,9 @@ services:
       - SMTP__PORT=25
       - PROVIDERS__LOCAL__STRATEGY=LocalStrategy
       - APP__HEALTH_ACCESS_KEY=${OPENCTI_HEALTHCHECK_ACCESS_KEY}
+      - APP__CUSTOM_CATALOGS="[\"/opt/opencti/catalogs/custom-manifest.json\"]"
+    volumes:
+      - ./custom-manifest.json:/opt/opencti/catalogs/custom-manifest.json:ro
     ports:
       - "8080:8080"
     depends_on:
