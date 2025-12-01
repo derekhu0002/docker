@@ -257,6 +257,27 @@ services:
       rabbitmq:
         condition: service_healthy
     restart: always
+  connector-mitre:
+    image: opencti/connector-mitre:6.8.14
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_MITRE_ID}
+      - CONNECTOR_TYPE=EXTERNAL_IMPORT
+      - CONNECTOR_NAME=MITRE ATT&CK
+      - CONNECTOR_SCOPE=mitre
+      - CONNECTOR_CONFIDENCE_LEVEL=100
+      - CONNECTOR_UPDATE_EXISTING_DATA=true
+      - CONNECTOR_LOG_LEVEL=info
+      - MITRE_ENTERPRISE_FILE_URL=https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json
+      - MITRE_PRE_ATTACK_FILE_URL=https://raw.githubusercontent.com/mitre/cti/master/pre-attack/pre-attack.json
+      - MITRE_MOBILE_ATTACK_FILE_URL=https://raw.githubusercontent.com/mitre/cti/master/mobile-attack/mobile-attack.json
+      - MITRE_ICS_ATTACK_FILE_URL=https://raw.githubusercontent.com/mitre/cti/master/ics-attack/ics-attack.json
+      - MITRE_INTERVAL=2
+    restart: always
+    depends_on:
+      opencti:
+        condition: service_healthy
 
 volumes:
   esdata:
