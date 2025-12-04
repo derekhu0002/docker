@@ -265,15 +265,31 @@ services:
       - CONNECTOR_ID=${CONNECTOR_MITRE_ID}
       - CONNECTOR_TYPE=EXTERNAL_IMPORT
       - CONNECTOR_NAME=MITRE ATT&CK
-      - CONNECTOR_SCOPE=mitre
+      - CONNECTOR_SCOPE=tool,report,malware,identity,campaign,intrusion-set,attack-pattern,course-of-action,x-mitre-data-source,x-mitre-data-component,x-mitre-matrix,x-mitre-tactic,x-mitre-collection
+      - CONNECTOR_LOG_LEVEL=info
+      - MITRE_ENTERPRISE_FILE_URL=https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack.json
+      - MITRE_MOBILE_ATTACK_FILE_URL=https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/mobile-attack/mobile-attack.json
+      - MITRE_ICS_ATTACK_FILE_URL=https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/ics-attack/ics-attack.json
+      - MITRE_CAPEC_FILE_URL=https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/stix-capec.json
+      - MITRE_INTERVAL=7
+    restart: always
+    depends_on:
+      opencti:
+        condition: service_healthy
+  connector-cisa-kev:
+    image: opencti/connector-cisa-known-exploited-vulnerabilities:6.8.14
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_CISA_KEV_ID}
+      - CONNECTOR_TYPE=EXTERNAL_IMPORT
+      - CONNECTOR_NAME=CISA Known Exploited Vulnerabilities
+      - CONNECTOR_SCOPE=cisa
       - CONNECTOR_CONFIDENCE_LEVEL=100
       - CONNECTOR_UPDATE_EXISTING_DATA=true
       - CONNECTOR_LOG_LEVEL=info
-      - MITRE_ENTERPRISE_FILE_URL=https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json
-      - MITRE_PRE_ATTACK_FILE_URL=https://raw.githubusercontent.com/mitre/cti/master/pre-attack/pre-attack.json
-      - MITRE_MOBILE_ATTACK_FILE_URL=https://raw.githubusercontent.com/mitre/cti/master/mobile-attack/mobile-attack.json
-      - MITRE_ICS_ATTACK_FILE_URL=https://raw.githubusercontent.com/mitre/cti/master/ics-attack/ics-attack.json
-      - MITRE_INTERVAL=2
+      - CISA_KEV_URL=https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+      - CISA_KEV_INTERVAL=3 # In hours
     restart: always
     depends_on:
       opencti:
@@ -287,36 +303,56 @@ services:
       - CONNECTOR_TYPE=EXTERNAL_IMPORT
       - CONNECTOR_NAME=AlienVault
       - CONNECTOR_SCOPE=alienvault
-      - CONNECTOR_CONFIDENCE_LEVEL=80
-      - CONNECTOR_UPDATE_EXISTING_DATA=true
+      - CONNECTOR_DURATION_PERIOD=P3D
       - CONNECTOR_LOG_LEVEL=info
-      - ALIENVAULT_API_KEY=39f4e0161fe45b1cc1c6f9bb105f614f45ad67ce7446e43a19c4f25842186e1e
-      - ALIENVAULT_TLP=white
+      - ALIENVAULT_BASE_URL=https://otx.alienvault.com
+      - ALIENVAULT_API_KEY=${ALIENVAULT_API_KEY}
+      - ALIENVAULT_PULSE_START_TIMESTAMP=2025-11-01T00:00:00
+      - ALIENVAULT_REPORT_STATUS=New
+      - ALIENVAULT_REPORT_TYPE=threat-report
+      - ALIENVAULT_GUESS_MALWARE=false
+      - ALIENVAULT_GUESS_CVE=false
+      - ALIENVAULT_EXCLUDED_PULSE_INDICATOR_TYPES=FileHash-MD5,FileHash-SHA1
+      - ALIENVAULT_TLP=White
+      - ALIENVAULT_FILTER_INDICATORS=true
+      - ALIENVAULT_CREATE_OBSERVABLES=true
       - ALIENVAULT_CREATE_INDICATORS=true
-      - ALIENVAULT_PULSE_START_TIMESTAMP=2023-01-01T00:00:00Z
-      - ALIENVAULT_REPORT_STATUS=new
-      - ALIENVAULT_INTERVAL=3
+      - ALIENVAULT_ENABLE_RELATIONSHIPS=true
+      - ALIENVAULT_ENABLE_ATTACK_PATTERNS_INDICATES=true
     restart: always
     depends_on:
       opencti:
         condition: service_healthy
   connector-misp-feed:
-    image: opencti/connector-misp-feed:6.8.14
+    image: opencti/connector-misp-feed:rolling
     environment:
       - OPENCTI_URL=http://opencti:8080
       - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
       - CONNECTOR_ID=${CONNECTOR_MISP_ID}
       - CONNECTOR_TYPE=EXTERNAL_IMPORT
-      - CONNECTOR_NAME=MISP Feed
-      - CONNECTOR_SCOPE=misp
+      - CONNECTOR_NAME=MISP Feed (ThreatFox)
+      - CONNECTOR_SCOPE=misp-feed-threatfox # Can be anything, but must be unique
+      - CONNECTOR_RUN_AND_TERMINATE=false
       - CONNECTOR_CONFIDENCE_LEVEL=80
-      - CONNECTOR_UPDATE_EXISTING_DATA=true
+      - CONNECTOR_UPDATE_EXISTING_DATA=false
       - CONNECTOR_LOG_LEVEL=info
-      - MISP_URL=https://www.circl.lu
-      - MISP_KEY=YOUR_MISP_KEY
-      - MISP_SSL_VERIFY=true
-      - MISP_FETCH_FROM_LAST=true
-      - MISP_INTERVAL=3
+      - MISP_FEED_URL=https://threatfox.abuse.ch/downloads/misp/ # URL of the MISP feed
+      - MISP_FEED_SSL_VERIFY=true
+      - MISP_FEED_CREATE_REPORTS=true # Required, create report for MISP event
+      - MISP_FEED_REPORT_TYPE=misp-event
+      - MISP_FEED_IMPORT_FROM_DATE=2025-11-01 # Required, import all event from this date
+      - MISP_FEED_CREATE_INDICATORS=true
+      - MISP_FEED_CREATE_OBSERVABLES=true # Required, create observables from attributes
+      - MISP_FEED_CREATE_OBJECT_OBSERVABLES=true # Required, create text observables for MISP objects
+      - MISP_FEED_CREATE_TAGS_AS_LABELS=true # Optional, create tags as labels (sanitize MISP tag to OpenCTI labels)
+      - MISP_FEED_GUESS_THREAT_FROM_TAGS=false # Optional, try to guess threats (threat actor, intrusion set, malware, etc.) from MISP tags when they are present in OpenCTI
+      - MISP_FEED_AUTHOR_FROM_TAGS=false # Optional, map creator:XX=YY (author of event will be YY instead of the author of the event)
+      - MISP_FEED_IMPORT_TO_IDS_NO_SCORE=40 # Optional, use as a score for the indicator/observable if the attribute to_ids is no
+      - MISP_FEED_IMPORT_UNSUPPORTED_OBSERVABLES_AS_TEXT=false #  Optional, import unsupported observable as x_opencti_text
+      - MISP_FEED_IMPORT_UNSUPPORTED_OBSERVABLES_AS_TEXT_TRANSPARENT=true #  Optional, import unsupported observable as x_opencti_text just with the value
+      - MISP_FEED_IMPORT_WITH_ATTACHMENTS=false # Optional, try to import a PDF file from the attachment attribute
+      - MISP_FEED_INTERVAL=720 # Required, in minutes
+      - MISP_FEED_SOURCE_TYPE=url # Optionnal, url or s3
     restart: always
     depends_on:
       opencti:
